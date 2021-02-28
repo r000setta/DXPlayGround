@@ -16,11 +16,18 @@ using namespace DirectX::PackedVector;
 
 enum class RenderLayer :int
 {
-	Opaque=0,
-	Highlight=1,
+	Opaque = 0,
+	Highlight = 1,
+	Dynamic = 2,
+	Sky=3,
 	Count
 };
 
+enum class ObjectFlag
+{
+	Hittable = 1,
+	NonHittable = 1 << 1
+};
 
 struct RenderItem
 {
@@ -28,6 +35,8 @@ struct RenderItem
 	RenderItem(const RenderItem & rhs) = delete;
 
 	bool Visible = true;
+	ObjectFlag Flag = ObjectFlag::NonHittable;
+	
 	BoundingBox Bounds;
 
 	XMFLOAT4X4 World = MathHelper::Identity4x4();
@@ -68,6 +77,8 @@ private:
 	void UpdateMaterialBuffer(const GameTimer& gt);
 	void UpdateMainPassCB(const GameTimer& gt);
 
+	void CreateBox();
+
 	void LoadTextures();
 	void BuildRootSignature();
 	void BuildDescriptorHeaps();
@@ -102,7 +113,11 @@ private:
 	std::vector<std::unique_ptr<RenderItem>> mAllRitems;
 	std::vector<RenderItem*> mRitemLayer[(int)RenderLayer::Count];
 
+	UINT mSkyTexHeapIndex = 0;
+
 	RenderItem* mPickedRitem = nullptr;
+
+	UINT objNums = 0;
 
 	PassConstants mMainPassCB;
 

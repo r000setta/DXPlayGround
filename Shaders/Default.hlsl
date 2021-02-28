@@ -15,74 +15,10 @@
     #define NUM_SPOT_LIGHTS 0
 #endif
 
-// Include structures and functions for lighting.
-#include "LightingUtil.hlsl"
-
-struct MaterialData
-{
-	float4   DiffuseAlbedo;
-	float3   FresnelR0;
-	float    Roughness;
-	float4x4 MatTransform;
-	uint     DiffuseMapIndex;
-	uint     MatPad0;
-	uint     MatPad1;
-	uint     MatPad2;
-};
+// Include common HLSL code.
+#include "Common.hlsl"
 
 
-// An array of textures, which is only supported in shader model 5.1+.  Unlike Texture2DArray, the textures
-// in this array can be different sizes and formats, making it more flexible than texture arrays.
-Texture2D gDiffuseMap[4] : register(t0);
-
-// Put in space1, so the texture array does not overlap with these resources.  
-// The texture array will occupy registers t0, t1, ..., t3 in space0. 
-StructuredBuffer<MaterialData> gMaterialData : register(t0, space1);
-
-
-SamplerState gsamPointWrap        : register(s0);
-SamplerState gsamPointClamp       : register(s1);
-SamplerState gsamLinearWrap       : register(s2);
-SamplerState gsamLinearClamp      : register(s3);
-SamplerState gsamAnisotropicWrap  : register(s4);
-SamplerState gsamAnisotropicClamp : register(s5);
-
-// Constant data that varies per frame.
-cbuffer cbPerObject : register(b0)
-{
-    float4x4 gWorld;
-	float4x4 gTexTransform;
-	uint gMaterialIndex;
-	uint gObjPad0;
-	uint gObjPad1;
-	uint gObjPad2;
-};
-
-// Constant data that varies per material.
-cbuffer cbPass : register(b1)
-{
-    float4x4 gView;
-    float4x4 gInvView;
-    float4x4 gProj;
-    float4x4 gInvProj;
-    float4x4 gViewProj;
-    float4x4 gInvViewProj;
-    float3 gEyePosW;
-    float cbPerObjectPad1;
-    float2 gRenderTargetSize;
-    float2 gInvRenderTargetSize;
-    float gNearZ;
-    float gFarZ;
-    float gTotalTime;
-    float gDeltaTime;
-    float4 gAmbientLight;
-
-    // Indices [0, NUM_DIR_LIGHTS) are directional lights;
-    // indices [NUM_DIR_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHTS) are point lights;
-    // indices [NUM_DIR_LIGHTS+NUM_POINT_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHT+NUM_SPOT_LIGHTS)
-    // are spot lights for a maximum of MaxLights per object.
-    Light gLights[MaxLights];
-};
 
 struct VertexIn
 {
@@ -123,8 +59,69 @@ VertexOut VS(VertexIn vin)
     return vout;
 }
 
+float3 BoxCubeMapLookup(float3 rayOrigin,float3 rayDir,float3 boxCenter,float3 boxExtents)
+{
+	float3 p=rayOrigin-boxCenter;
+	float3 t1=(-p+boxExtents)/rayDir;
+	float3 t2=(-p-boxExtents)/rayDir;
+	float3 tmax=max(t1,t2);
+	float t=min(min(tmax.x,tmax.y),tmax.z);
+	return p+t*rayDir;
+}
+
 float4 PS(VertexOut pin) : SV_Target
 {
+	//float3 irradiance = float3(0.0f, 0.0f, 0.0f);
+
+ //   float3 normal = normalize(pin.NormalW);
+ //   float3 up = float3(0.0, 1.0, 0.0);
+ //   float3 right = cross(up, normal);
+ //   up = cross(normal, right);
+
+ //   float sampleDelta = 0.025f;
+ //   float numSamples = 0.0f;
+ //   for (float phi = 0.0f; phi < 2.0f * PI; phi += sampleDelta)
+ //   {
+ //       for (float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
+ //       {
+ //           // spherical to cartesian (in tangent space)
+ //           float3 tangentSample = float3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
+ //           // tangent space to world
+ //           float3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal;
+
+ //           irradiance += gCubeMap.Sample(gsamLinearWrap, sampleVec).rgb * cos(theta) * sin(theta);
+ //           numSamples++;
+ //       }
+ //   }
+ //   irradiance = PI * irradiance * (1.0f / numSamples);
+
+ //   return float4(irradiance, 1.0f);
+   
+    //float roughness = 0.1f;      
+    //const uint NumSamples = 1024u;
+    //float3 N = normalize(pin.NormalW);
+    //float3 R = N;
+    //float3 V = R;
+
+    //float3 prefilteredColor = float3(0.1f, 0.1f, 0.1f);
+    //float totalWeight = 0.1f;
+    //for (uint i = 0u; i < NumSamples; ++i)
+    //{
+    //    float2 Xi = Hammersley(i, NumSamples);
+    //    float3 H = ImportanceSampleGGX(Xi, N, roughness);
+    //    float3 L = normalize(2.0f * dot(V, H) * H - V);
+    //    float NdotL = max(dot(N, L), 0.0f);
+    //    if (NdotL > 0.f)
+    //    {
+    //        prefilteredColor += gCubeMap.Sample(gsamLinearWrap, L).rgb * NdotL;
+    //        totalWeight += NdotL;
+    //    }
+    //}
+
+    //prefilteredColor = prefilteredColor / totalWeight;
+
+    //return float4(prefilteredColor, 1.0f);
+
 	// Fetch the material data.
 	MaterialData matData = gMaterialData[gMaterialIndex];
 	float4 diffuseAlbedo = matData.DiffuseAlbedo;
@@ -133,7 +130,7 @@ float4 PS(VertexOut pin) : SV_Target
 	uint diffuseTexIndex = matData.DiffuseMapIndex;
 
 	// Dynamically look up the texture in the array.
-	diffuseAlbedo *= gDiffuseMap[diffuseTexIndex].Sample(gsamLinearWrap, pin.TexC);
+	diffuseAlbedo *= gDiffuseMap[diffuseTexIndex].Sample(gsamAnisotropicWrap, pin.TexC);
 	
     // Interpolating normal can unnormalize it, so renormalize it.
     pin.NormalW = normalize(pin.NormalW);
@@ -144,13 +141,22 @@ float4 PS(VertexOut pin) : SV_Target
     // Light terms.
     float4 ambient = gAmbientLight*diffuseAlbedo;
 
-    const float shininess = 1.0f - roughness;
+	const float shininess = 1.0f - roughness;
     Material mat = { diffuseAlbedo, fresnelR0, shininess };
     float3 shadowFactor = 1.0f;
     float4 directLight = ComputeLighting(gLights, mat, pin.PosW,
         pin.NormalW, toEyeW, shadowFactor);
 
     float4 litColor = ambient + directLight;
+
+	// Add in specular reflections.
+	float3 center=float3(0.0,0.0,0.0);
+	float3 extents=float3(2500,2500,2500);
+	float3 r = reflect(-toEyeW, pin.NormalW);
+	//r=BoxCubeMapLookup(pin.PosW,r,center,extents);
+	float4 reflectionColor = gCubeMap.Sample(gsamLinearWrap, r);
+	float3 fresnelFactor = SchlickFresnel(fresnelR0, pin.NormalW, r);
+	litColor.rgb += shininess * fresnelFactor * reflectionColor.rgb;
 
     // Common convention to take alpha from diffuse albedo.
     litColor.a = diffuseAlbedo.a;
