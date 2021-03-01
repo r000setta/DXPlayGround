@@ -108,6 +108,9 @@ private:
 
 	std::unique_ptr<BlurFilter> mBlurFilter;
 
+	bool mFrustumCullingEnabled = true;
+	BoundingFrustum mCamFrustum;
+
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
 	std::unordered_map<std::string, std::unique_ptr<Material>> mMaterials;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
