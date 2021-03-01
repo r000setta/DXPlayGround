@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\Filter">
+      <UniqueIdentifier>{0e7c74ff-7d68-4e39-a658-0a439cf0766e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameTimer.h">
@@ -47,6 +50,9 @@
     </ClInclude>
     <ClInclude Include="ShadowMap.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BlurFilter.h">
+      <Filter>头文件\Filter</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +105,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ShadowMap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BlurFilter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

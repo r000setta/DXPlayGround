@@ -6,6 +6,7 @@
 #include "GeometryGenerator.h"
 #include "Camera.h"
 #include "FrameResource.h"
+#include "BlurFilter.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -81,6 +82,7 @@ private:
 
 	void LoadTextures();
 	void BuildRootSignature();
+	void BuildPostProcessRootSignature();
 	void BuildDescriptorHeaps();
 	void BuildShadersAndInputLayout();
 	void BuildShapeGeometry();
@@ -100,7 +102,11 @@ private:
 	UINT mCbvSrvDescriptorSize = 0;
 
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
+	ComPtr<ID3D12RootSignature> mPostProcessRootSignature = nullptr;
+
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
+
+	std::unique_ptr<BlurFilter> mBlurFilter;
 
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
 	std::unordered_map<std::string, std::unique_ptr<Material>> mMaterials;
