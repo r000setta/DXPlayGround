@@ -1,23 +1,25 @@
 #pragma once
+
 #include "d3dUtil.h"
 
 class ShadowMap
 {
 public:
-	ShadowMap(ID3D12Device* device, UINT width, UINT height);
+	ShadowMap(ID3D12Device* device,
+		UINT width, UINT height);
 
 	ShadowMap(const ShadowMap& rhs) = delete;
 	ShadowMap& operator=(const ShadowMap& rhs) = delete;
 	~ShadowMap() = default;
 
-	UINT Width()const;
-	UINT Height()const;
+	UINT Width() const;
+	UINT Height() const;
 	ID3D12Resource* Resource();
-	CD3DX12_GPU_DESCRIPTOR_HANDLE Srv()const;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE Dsv()const;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE Srv() const;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE Dsv() const;
 
-	D3D12_VIEWPORT Viewport()const;
-	D3D12_RECT ScissorRect()const;
+	D3D12_VIEWPORT Viewport() const;
+	D3D12_RECT ScissorRect() const;
 
 	void BuildDescriptors(
 		CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuSrv,
@@ -29,6 +31,8 @@ public:
 private:
 	void BuildDescriptors();
 	void BuildResource();
+
+private:
 
 	ID3D12Device* md3dDevice = nullptr;
 
@@ -45,3 +49,4 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> mShadowMap = nullptr;
 };
+

@@ -16,6 +16,9 @@
     <Filter Include="头文件\Filter">
       <UniqueIdentifier>{0e7c74ff-7d68-4e39-a658-0a439cf0766e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Graphics">
+      <UniqueIdentifier>{9c191289-09f4-4535-a80e-5347fb3fa683}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameTimer.h">
@@ -53,6 +56,9 @@
     </ClInclude>
     <ClInclude Include="BlurFilter.h">
       <Filter>头文件\Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="UploadBuffer.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

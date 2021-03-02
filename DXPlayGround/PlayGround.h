@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "FrameResource.h"
 #include "BlurFilter.h"
+#include "ShadowMap.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -19,8 +20,8 @@ enum class RenderLayer :int
 {
 	Opaque = 0,
 	Highlight = 1,
-	Dynamic = 2,
-	Sky=3,
+	Sky=2,
+	Debug=3,
 	Count
 };
 
@@ -64,6 +65,7 @@ public:
 	virtual bool Initialize() override;
 
 private:
+	virtual void CreateRtvAndDsvDescriptorHeaps() override;
 	virtual void OnResize()override;
 	virtual void Update(const GameTimer& gt)override;
 	virtual void Draw(const GameTimer& gt)override;
@@ -76,7 +78,9 @@ private:
 	void AnimateMaterials(const GameTimer& gt);
 	void UpdateObjectCBs(const GameTimer& gt);
 	void UpdateMaterialBuffer(const GameTimer& gt);
+	void UpdateShadowTransform(const GameTimer& gt);
 	void UpdateMainPassCB(const GameTimer& gt);
+	void UpdateShadowPassCB(const GameTimer& gt);
 
 	void CreateBox();
 
@@ -91,15 +95,14 @@ private:
 	void BuildMaterials();
 	void BuildRenderItems();
 	void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
+	void DrawSceneToShadowMap();
 	void Pick(int sx, int sy);
 
-	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GetStaticSamplers();
+	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 7> GetStaticSamplers();
 
 	std::vector<std::unique_ptr<FrameResource>> mFrameResources;
 	FrameResource* mCurrFrameResource = nullptr;
 	int mCurrFrameResourceIdx = 0;
-	
-	UINT mCbvSrvDescriptorSize = 0;
 
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
 	ComPtr<ID3D12RootSignature> mPostProcessRootSignature = nullptr;
@@ -123,12 +126,38 @@ private:
 	std::vector<RenderItem*> mRitemLayer[(int)RenderLayer::Count];
 
 	UINT mSkyTexHeapIndex = 0;
+	UINT mShadowMapHeapIndex = 0;
+
+	UINT mNullCubeSrvIndex = 0;
+	UINT mNullTexSrvIndex = 0;
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE mNullSrv;
 
 	RenderItem* mPickedRitem = nullptr;
 
 	UINT objNums = 0;
 
 	PassConstants mMainPassCB;
+	PassConstants mShadowPassCB;
+
+	std::unique_ptr<ShadowMap> mShadowMap;
+
+	DirectX::BoundingSphere mSceneBounds;
+
+	float mLightNearZ = 0.0f;
+	float mLightFarZ = 0.0f;
+	XMFLOAT3 mLightPosW;
+	XMFLOAT4X4 mLightView = MathHelper::Identity4x4();
+	XMFLOAT4X4 mLightProj = MathHelper::Identity4x4();
+	XMFLOAT4X4 mShadowTransform = MathHelper::Identity4x4();
+
+	float mLightRotationAngle = 0.0f;
+	XMFLOAT3 mBaseLightDirections[3] = {
+		XMFLOAT3(0.57735f, -0.57735f, 0.57735f),
+		XMFLOAT3(-0.57735f, -0.57735f, 0.57735f),
+		XMFLOAT3(0.0f, -0.707f, -0.707f)
+	};
+	XMFLOAT3 mRotatedLightDirections[3];
 
 	Camera mCamera;
 
