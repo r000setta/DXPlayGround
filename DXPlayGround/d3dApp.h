@@ -82,9 +82,6 @@ protected:
     bool mResizing = false;
     bool mFullscreenState = false;
 
-    bool m4xMsaaState = false;
-    UINT m4xMsaaQuality = 0;
-
     GameTimer mTimer;
 
     Microsoft::WRL::ComPtr<IDXGIFactory4> mdxgiFactory;
@@ -106,6 +103,11 @@ protected:
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mRtvHeap;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDsvHeap;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvHeap;
+
+    bool m4xMsaaState = false;
+    UINT m4xMsaaQuality = 0;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> mMsaaRenderTarget;
 
     D3D12_VIEWPORT mScreenViewport;
     D3D12_RECT mScissorRect;

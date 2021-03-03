@@ -2,6 +2,16 @@
 
 #include "d3dUtil.h"
 
+enum class CubeMapFace : int
+{
+	PositiveX = 0,
+	NegativeX = 1,
+	PositiveY = 2,
+	NegativeY = 3,
+	PositiveZ = 4,
+	NegativeZ = 5
+};
+
 class ShadowMap
 {
 public:
@@ -12,14 +22,14 @@ public:
 	ShadowMap& operator=(const ShadowMap& rhs) = delete;
 	~ShadowMap() = default;
 
-	UINT Width() const;
-	UINT Height() const;
+	UINT Width()const;
+	UINT Height()const;
 	ID3D12Resource* Resource();
-	CD3DX12_GPU_DESCRIPTOR_HANDLE Srv() const;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE Dsv() const;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE Srv()const;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE Dsv()const;
 
-	D3D12_VIEWPORT Viewport() const;
-	D3D12_RECT ScissorRect() const;
+	D3D12_VIEWPORT Viewport()const;
+	D3D12_RECT ScissorRect()const;
 
 	void BuildDescriptors(
 		CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuSrv,
@@ -49,4 +59,3 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> mShadowMap = nullptr;
 };
-

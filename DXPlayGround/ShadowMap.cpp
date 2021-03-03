@@ -67,7 +67,6 @@ void ShadowMap::OnResize(UINT newWidth, UINT newHeight)
 		mHeight = newHeight;
 
 		BuildResource();
-
 		BuildDescriptors();
 	}
 }

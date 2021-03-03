@@ -8,6 +8,8 @@
 #include "FrameResource.h"
 #include "BlurFilter.h"
 #include "ShadowMap.h"
+#include "Ssao.h"
+#include "AnimationHelper.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -70,9 +72,9 @@ private:
 	virtual void Update(const GameTimer& gt)override;
 	virtual void Draw(const GameTimer& gt)override;
 
-	virtual void OnMouseDown(WPARAM btnState, int x, int y)override;
-	virtual void OnMouseUp(WPARAM btnState, int x, int y)override;
-	virtual void OnMouseMove(WPARAM btnState, int x, int y)override;
+	virtual void OnMouseDown(WPARAM btnState, int x, int y) override;
+	virtual void OnMouseUp(WPARAM btnState, int x, int y) override;
+	virtual void OnMouseMove(WPARAM btnState, int x, int y) override;
 
 	void OnKeyboardInput(const GameTimer& gt);
 	void AnimateMaterials(const GameTimer& gt);
@@ -81,22 +83,32 @@ private:
 	void UpdateShadowTransform(const GameTimer& gt);
 	void UpdateMainPassCB(const GameTimer& gt);
 	void UpdateShadowPassCB(const GameTimer& gt);
+	void UpdateSsaoCB(const GameTimer& gt);
 
 	void CreateBox();
 
+	void DefineSkullAnimation();
 	void LoadTextures();
 	void BuildRootSignature();
 	void BuildPostProcessRootSignature();
+	void BuildSsaoRootSignature();
 	void BuildDescriptorHeaps();
 	void BuildShadersAndInputLayout();
 	void BuildShapeGeometry();
+	void BuildSkullGeometry();
 	void BuildPSOs();
 	void BuildFrameResources();
 	void BuildMaterials();
 	void BuildRenderItems();
 	void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
 	void DrawSceneToShadowMap();
+	void DrawNormalsAndDepth();
 	void Pick(int sx, int sy);
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GetCpuSrv(int index) const;
+	CD3DX12_GPU_DESCRIPTOR_HANDLE GetGpuSrv(int index) const;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GetDsv(int index) const;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GetRtv(int index) const;
 
 	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 7> GetStaticSamplers();
 
@@ -106,12 +118,13 @@ private:
 
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
 	ComPtr<ID3D12RootSignature> mPostProcessRootSignature = nullptr;
+	ComPtr<ID3D12RootSignature> mSsaoRootSignature = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 
 	std::unique_ptr<BlurFilter> mBlurFilter;
 
-	bool mFrustumCullingEnabled = true;
+	bool mFrustumCullingEnabled = false;
 	BoundingFrustum mCamFrustum;
 
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
@@ -127,9 +140,12 @@ private:
 
 	UINT mSkyTexHeapIndex = 0;
 	UINT mShadowMapHeapIndex = 0;
+	UINT mSsaoHeapIndexStart = 0;
+	UINT mSsaoAmbientMapIndex = 0;
 
 	UINT mNullCubeSrvIndex = 0;
-	UINT mNullTexSrvIndex = 0;
+	UINT mNullTexSrvIndex1 = 0;
+	UINT mNullTexSrvIndex2 = 0;
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE mNullSrv;
 
@@ -141,8 +157,15 @@ private:
 	PassConstants mShadowPassCB;
 
 	std::unique_ptr<ShadowMap> mShadowMap;
+	std::unique_ptr<Ssao> mSsao;
 
 	DirectX::BoundingSphere mSceneBounds;
+
+	float mAnimTimePos = 0.0f;
+	BoneAnimation mSkullAnimation;
+
+	RenderItem* mSkullRitem = nullptr;
+	XMFLOAT4X4 mSkullWorld = MathHelper::Identity4x4();
 
 	float mLightNearZ = 0.0f;
 	float mLightFarZ = 0.0f;

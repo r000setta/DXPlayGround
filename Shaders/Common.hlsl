@@ -32,10 +32,11 @@ struct MaterialData
 
 TextureCube gCubeMap : register(t0);
 Texture2D gShadowMap : register(t1);
+Texture2D gSsaoMap   : register(t2);
 
 // An array of textures, which is only supported in shader model 5.1+.  Unlike Texture2DArray, the textures
 // in this array can be different sizes and formats, making it more flexible than texture arrays.
-Texture2D gTextureMaps[10] : register(t2);
+Texture2D gTextureMaps[10] : register(t3);
 
 // Put in space1, so the texture array does not overlap with these resources.  
 // The texture array will occupy registers t0, t1, ..., t3 in space0. 
@@ -61,6 +62,7 @@ cbuffer cbPerObject : register(b0)
 	uint gObjPad2;
 };
 
+// Constant data that varies per material.
 cbuffer cbPass : register(b1)
 {
     float4x4 gView;
@@ -69,6 +71,7 @@ cbuffer cbPass : register(b1)
     float4x4 gInvProj;
     float4x4 gViewProj;
     float4x4 gInvViewProj;
+    float4x4 gViewProjTex;
     float4x4 gShadowTransform;
     float3 gEyePosW;
     float cbPerObjectPad1;
@@ -111,7 +114,8 @@ float3 NormalSampleToWorldSpace(float3 normalMapSample, float3 unitNormalW, floa
 //---------------------------------------------------------------------------------------
 // PCF for shadow mapping.
 //---------------------------------------------------------------------------------------
-
+//#define SMAP_SIZE = (2048.0f)
+//#define SMAP_DX = (1.0f / SMAP_SIZE)
 float CalcShadowFactor(float4 shadowPosH)
 {
     // Complete projection by doing division by w.

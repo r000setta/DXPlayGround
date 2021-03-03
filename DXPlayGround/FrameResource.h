@@ -22,6 +22,7 @@ struct PassConstants
     DirectX::XMFLOAT4X4 InvProj = MathHelper::Identity4x4();
     DirectX::XMFLOAT4X4 ViewProj = MathHelper::Identity4x4();
     DirectX::XMFLOAT4X4 InvViewProj = MathHelper::Identity4x4();
+    DirectX::XMFLOAT4X4 ViewProjTex = MathHelper::Identity4x4();
     DirectX::XMFLOAT4X4 ShadowTransform = MathHelper::Identity4x4();
     DirectX::XMFLOAT3 EyePosW = { 0.0f, 0.0f, 0.0f };
     float cbPerObjectPad1 = 0.0f;
@@ -35,6 +36,23 @@ struct PassConstants
     DirectX::XMFLOAT4 AmbientLight = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     Light Lights[MaxLights];
+};
+
+struct SsaoConstants
+{
+    DirectX::XMFLOAT4X4 Proj;
+    DirectX::XMFLOAT4X4 InvProj;
+    DirectX::XMFLOAT4X4 ProjTex;
+    DirectX::XMFLOAT4   OffsetVectors[14];
+
+    DirectX::XMFLOAT4 BlurWeights[3];
+
+    DirectX::XMFLOAT2 InvRenderTargetSize = { 0.0f, 0.0f };
+
+    float OcclusionRadius = 0.5f;
+    float OcclusionFadeStart = 0.2f;
+    float OcclusionFadeEnd = 2.0f;
+    float SurfaceEpsilon = 0.05f;
 };
 
 struct MaterialData
@@ -72,8 +90,8 @@ public:
 
     std::unique_ptr<UploadBuffer<PassConstants>> PassCB = nullptr;
     std::unique_ptr<UploadBuffer<ObjectConstants>> ObjectCB = nullptr;
+    std::unique_ptr<UploadBuffer<SsaoConstants>> SsaoCB = nullptr;
 
     std::unique_ptr<UploadBuffer<MaterialData>> MaterialBuffer = nullptr;
-
     UINT64 Fence = 0;
 };
