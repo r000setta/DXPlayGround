@@ -331,6 +331,12 @@ void PlayGroundApp::UpdateObjectCBs(const GameTimer& gt)
 	{
 		if (e->NumFramesDirty > 0)
 		{
+			if (e->Geo != nullptr)
+			{
+				if (e->Geo->Name == "boxGeo1") {
+					int a = 1;
+				}
+			}
 			XMMATRIX world = XMLoadFloat4x4(&e->World);
 			XMMATRIX texTransform = XMLoadFloat4x4(&e->TexTransform);
 
@@ -542,6 +548,7 @@ void PlayGroundApp::CreateBox()
 		boxVertices[i].Pos = box.Vertices[i].Position;
 		boxVertices[i].Normal = box.Vertices[i].Normal;
 		boxVertices[i].TexC = box.Vertices[i].TexC;
+		boxVertices[i].TangentU = box.Vertices[i].TangentU;
 	}
 
 	SubmeshGeometry boxSubmesh;
@@ -585,7 +592,7 @@ void PlayGroundApp::CreateBox()
 	XMStoreFloat4x4(&boxItem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(3.0f, 0.0f, 0.0f));
 	XMStoreFloat4x4(&boxItem->TexTransform, XMMatrixScaling(1.0f, 1.0f, 1.0f));
 	boxItem->ObjCBIndex = objNums++;
-	boxItem->Mat = mMaterials["mirror0"].get();
+	boxItem->Mat = mMaterials["bricks0"].get();
 	boxItem->Geo = mGeometries["boxGeo1"].get();
 	boxItem->Bounds = boxItem->Geo->DrawArgs["box"].Bounds;
 	boxItem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
