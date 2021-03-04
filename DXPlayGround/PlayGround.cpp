@@ -218,8 +218,8 @@ void PlayGroundApp::Draw(const GameTimer& gt)
 	mCommandList->SetPipelineState(mPSOs["opaque"].Get());
 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Opaque]);
 
-	mCommandList->SetPipelineState(mPSOs["debug"].Get());
-	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Debug]);
+	//mCommandList->SetPipelineState(mPSOs["debug"].Get());
+	//DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Debug]);
 
 	mCommandList->SetPipelineState(mPSOs["sky"].Get());
 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Sky]);
@@ -239,6 +239,10 @@ void PlayGroundApp::Draw(const GameTimer& gt)
 
 	ImGui::Begin("Info Panel");
 	ImGui::Text("Hit object:%s", mPickedRitem->Geo == nullptr ? "None" : mPickedRitem->Geo->Name.c_str());
+	if (ImGui::Button("Create"))
+	{
+		CreateBox();
+	}
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
 
@@ -578,16 +582,19 @@ void PlayGroundApp::CreateBox()
 	mGeometries[boxGeo->Name] = std::move(boxGeo);
 
 	auto boxItem = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&boxItem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(0.0f, 0.0f, 1.0f));
+	XMStoreFloat4x4(&boxItem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(3.0f, 0.0f, 0.0f));
 	XMStoreFloat4x4(&boxItem->TexTransform, XMMatrixScaling(1.0f, 1.0f, 1.0f));
-	boxItem->ObjCBIndex = 0;
-	boxItem->Mat = mMaterials["crate0"].get();
+	boxItem->ObjCBIndex = objNums++;
+	boxItem->Mat = mMaterials["mirror0"].get();
 	boxItem->Geo = mGeometries["boxGeo1"].get();
 	boxItem->Bounds = boxItem->Geo->DrawArgs["box"].Bounds;
 	boxItem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	boxItem->IndexCount = boxItem->Geo->DrawArgs["box"].IndexCount;
 	boxItem->StartIndexLocation = boxItem->Geo->DrawArgs["box"].StartIndexLocation;
 	boxItem->BaseVertexLocation = boxItem->Geo->DrawArgs["box"].BaseVertexLocation;
+
+	mRitemLayer[(int)RenderLayer::Opaque].push_back(boxItem.get());
+	mAllRitems.push_back(std::move(boxItem));
 }
 
 void PlayGroundApp::DefineSkullAnimation()
@@ -1465,7 +1472,7 @@ void PlayGroundApp::BuildMaterials()
 	skullMat->DiffuseSrvHeapIndex = 4;
 	skullMat->NormalSrvHeapIndex = 5;
 	skullMat->DiffuseAlbedo = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	skullMat->FresnelR0 = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	skullMat->FresnelR0 = XMFLOAT3(0.8f, 0.8f, 0.8f);
 	skullMat->Roughness = 0.01f;
 
 	mMaterials["bricks0"] = std::move(bricks0);
