@@ -327,16 +327,11 @@ void PlayGroundApp::UpdateObjectCBs(const GameTimer& gt)
 	XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(view), view);
 
 	auto currObjectCB = mCurrFrameResource->ObjectCB.get();
+	int num = 0;
 	for (auto& e : mAllRitems)
 	{
 		if (e->NumFramesDirty > 0)
 		{
-			if (e->Geo != nullptr)
-			{
-				if (e->Geo->Name == "boxGeo1") {
-					int a = 1;
-				}
-			}
 			XMMATRIX world = XMLoadFloat4x4(&e->World);
 			XMMATRIX texTransform = XMLoadFloat4x4(&e->TexTransform);
 
@@ -348,6 +343,7 @@ void PlayGroundApp::UpdateObjectCBs(const GameTimer& gt)
 
 			if ((localSpaceFrustum.Contains(e->Bounds) != DirectX::DISJOINT) || (mFrustumCullingEnabled == false))
 			{
+				num++;
 				ObjectConstants objConstants;
 				XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
 				XMStoreFloat4x4(&objConstants.TexTransform, XMMatrixTranspose(texTransform));
@@ -1118,10 +1114,14 @@ void PlayGroundApp::BuildShapeGeometry()
 	boxGeo->IndexBufferByteSize = boxibByteSize;
 
 	BoundingBox bounds;
-	XMStoreFloat3(&bounds.Center, 0.5f * (box.VMax + box.VMin));
-	XMStoreFloat3(&bounds.Extents, 0.5f * (box.VMax - box.VMin));
+	BoundingBox::CreateFromPoints(bounds, boxVertices.size(), &boxVertices[0].Pos, sizeof(Vertex));
 
-	boxSubmesh.Bounds = bounds;
+
+	boxSubmesh.Bounds = box.bounds;
+	gridSubmesh.Bounds = grid.bounds;
+	sphereSubmesh.Bounds = sphere.bounds;
+	cylinderSubmesh.Bounds = cylinder.bounds;
+	quadSubmesh.Bounds = quad.bounds;
 
 	boxGeo->DrawArgs["box"] = boxSubmesh;
 
@@ -1189,8 +1189,7 @@ void PlayGroundApp::BuildSkullGeometry()
 	}
 
 	BoundingBox bounds;
-	XMStoreFloat3(&bounds.Center, 0.5f * (vMin + vMax));
-	XMStoreFloat3(&bounds.Extents, 0.5f * (vMax - vMin));
+	BoundingBox::CreateFromPoints(bounds, vertices.size(), &vertices[0].Pos, sizeof(Vertex));
 
 	fin >> ignore;
 	fin >> ignore;
@@ -1500,6 +1499,7 @@ void PlayGroundApp::BuildRenderItems()
 	skullRitem->Mat = mMaterials["skullMat"].get();
 	skullRitem->Geo = mGeometries["skullGeo"].get();
 	skullRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	skullRitem->Bounds = skullRitem->Geo->DrawArgs["skull"].Bounds;
 	skullRitem->IndexCount = skullRitem->Geo->DrawArgs["skull"].IndexCount;
 	skullRitem->StartIndexLocation = skullRitem->Geo->DrawArgs["skull"].StartIndexLocation;
 	skullRitem->BaseVertexLocation = skullRitem->Geo->DrawArgs["skull"].BaseVertexLocation;
@@ -1528,6 +1528,7 @@ void PlayGroundApp::BuildRenderItems()
 	skyRitem->ObjCBIndex = objNums++;
 	skyRitem->Mat = mMaterials["sky"].get();
 	skyRitem->Geo = mGeometries["shapeGeo"].get();
+	skyRitem->Bounds = skyRitem->Geo->DrawArgs["sphere"].Bounds;
 	skyRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	skyRitem->IndexCount = skyRitem->Geo->DrawArgs["sphere"].IndexCount;
 	skyRitem->StartIndexLocation = skyRitem->Geo->DrawArgs["sphere"].StartIndexLocation;
@@ -1542,6 +1543,7 @@ void PlayGroundApp::BuildRenderItems()
 	quadRitem->ObjCBIndex = objNums++;
 	quadRitem->Mat = mMaterials["bricks0"].get();
 	quadRitem->Geo = mGeometries["shapeGeo"].get();
+	quadRitem->Bounds = quadRitem->Geo->DrawArgs["quad"].Bounds;
 	quadRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	quadRitem->IndexCount = quadRitem->Geo->DrawArgs["quad"].IndexCount;
 	quadRitem->StartIndexLocation = quadRitem->Geo->DrawArgs["quad"].StartIndexLocation;
@@ -1556,6 +1558,7 @@ void PlayGroundApp::BuildRenderItems()
 	gridRitem->ObjCBIndex = objNums++;
 	gridRitem->Mat = mMaterials["tile0"].get();
 	gridRitem->Geo = mGeometries["shapeGeo"].get();
+	gridRitem->Bounds = gridRitem->Geo->DrawArgs["grid"].Bounds;
 	gridRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	gridRitem->IndexCount = gridRitem->Geo->DrawArgs["grid"].IndexCount;
 	gridRitem->StartIndexLocation = gridRitem->Geo->DrawArgs["grid"].StartIndexLocation;
@@ -1582,6 +1585,7 @@ void PlayGroundApp::BuildRenderItems()
 		leftCylRitem->ObjCBIndex = objNums++;
 		leftCylRitem->Mat = mMaterials["bricks0"].get();
 		leftCylRitem->Geo = mGeometries["shapeGeo"].get();
+		leftCylRitem->Bounds = leftCylRitem->Geo->DrawArgs["cylinder"].Bounds;
 		leftCylRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		leftCylRitem->IndexCount = leftCylRitem->Geo->DrawArgs["cylinder"].IndexCount;
 		leftCylRitem->StartIndexLocation = leftCylRitem->Geo->DrawArgs["cylinder"].StartIndexLocation;
@@ -1592,6 +1596,7 @@ void PlayGroundApp::BuildRenderItems()
 		rightCylRitem->ObjCBIndex = objNums++;
 		rightCylRitem->Mat = mMaterials["bricks0"].get();
 		rightCylRitem->Geo = mGeometries["shapeGeo"].get();
+		rightCylRitem->Bounds = rightCylRitem->Geo->DrawArgs["cylinder"].Bounds;
 		rightCylRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		rightCylRitem->IndexCount = rightCylRitem->Geo->DrawArgs["cylinder"].IndexCount;
 		rightCylRitem->StartIndexLocation = rightCylRitem->Geo->DrawArgs["cylinder"].StartIndexLocation;
@@ -1602,6 +1607,7 @@ void PlayGroundApp::BuildRenderItems()
 		leftSphereRitem->ObjCBIndex = objNums++;
 		leftSphereRitem->Mat = mMaterials["mirror0"].get();
 		leftSphereRitem->Geo = mGeometries["shapeGeo"].get();
+		leftSphereRitem->Bounds = leftSphereRitem->Geo->DrawArgs["sphere"].Bounds;
 		leftSphereRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		leftSphereRitem->IndexCount = leftSphereRitem->Geo->DrawArgs["sphere"].IndexCount;
 		leftSphereRitem->StartIndexLocation = leftSphereRitem->Geo->DrawArgs["sphere"].StartIndexLocation;
@@ -1612,6 +1618,7 @@ void PlayGroundApp::BuildRenderItems()
 		rightSphereRitem->ObjCBIndex = objNums++;
 		rightSphereRitem->Mat = mMaterials["mirror0"].get();
 		rightSphereRitem->Geo = mGeometries["shapeGeo"].get();
+		rightSphereRitem->Bounds = rightSphereRitem->Geo->DrawArgs["sphere"].Bounds;
 		rightSphereRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		rightSphereRitem->IndexCount = rightSphereRitem->Geo->DrawArgs["sphere"].IndexCount;
 		rightSphereRitem->StartIndexLocation = rightSphereRitem->Geo->DrawArgs["sphere"].StartIndexLocation;
@@ -1732,18 +1739,19 @@ void PlayGroundApp::Pick(int sx, int sy)
 	mPickedRitem->Visible = false;
 	mPickedRitem->Geo=nullptr;
 
-	XMVECTOR rayOrigin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-	XMVECTOR rayDir = XMVectorSet(vx, vy, 1.0f, 0.0f);
-
 	XMMATRIX V = mCamera.GetView();
 	XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(V), V);
 
+	XMVECTOR rayOrigin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	XMVECTOR rayDir = XMVectorSet(vx, vy, 1.0f, 0.0f);
+
 	for (auto ri : mRitemLayer[(int)RenderLayer::Opaque])
 	{
-		if (ri->Visible == false || ri->Flag == ObjectFlag::NonHittable)
+		if (ri->Visible == false)
 		{
 			continue;
 		}
+
 		auto geo = ri->Geo;
 		
 		XMMATRIX W = XMLoadFloat4x4(&ri->World);

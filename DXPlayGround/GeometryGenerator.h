@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <DirectXMath.h>
+#include <DirectXCollision.h>
 #include <vector>
 
 class GeometryGenerator
@@ -58,9 +59,6 @@ public:
 		std::vector<Vertex> Vertices;
         std::vector<uint32> Indices32;
 
-		DirectX::XMVECTOR VMin;
-		DirectX::XMVECTOR VMax;
-
         std::vector<uint16>& GetIndices16()
         {
 			if(mIndices16.empty())
@@ -73,6 +71,7 @@ public:
 			return mIndices16;
         }
 
+		DirectX::BoundingBox bounds;
 	private:
 		std::vector<uint16> mIndices16;
 	};

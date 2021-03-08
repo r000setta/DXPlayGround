@@ -29,6 +29,8 @@
 #include "DDSTextureLoader.h"
 #include "MathHelper.h"
 
+using Microsoft::WRL::ComPtr;
+
 extern const int gNumFrameResources;
 
 inline void d3dSetDebugName(IDXGIObject* obj, const char* name)

@@ -141,19 +141,35 @@
   <ItemGroup>
     <ClInclude Include="AnimationHelper.h" />
     <ClInclude Include="BlurFilter.h" />
+    <ClInclude Include="BufferBase.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CommandBuffer.h" />
     <ClInclude Include="d3dApp.h" />
     <ClInclude Include="d3dUtil.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DDSTextureLoader.h" />
+    <ClInclude Include="DescriptorHeap.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="GeometryGenerator.h" />
+    <ClInclude Include="GPUResource.h" />
+    <ClInclude Include="Graphics.h" />
+    <ClInclude Include="JProperty.h" />
+    <ClInclude Include="JRtti.h" />
     <ClInclude Include="MathHelper.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Name.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="PlayGround.h" />
+    <ClInclude Include="PSOPool.h" />
+    <ClInclude Include="RenderTarget.h" />
+    <ClInclude Include="RenderTexture.h" />
     <ClInclude Include="RootSignature.h" />
+    <ClInclude Include="Shader.h" />
     <ClInclude Include="ShadowMap.h" />
+    <ClInclude Include="SkyBox.h" />
     <ClInclude Include="Ssao.h" />
+    <ClInclude Include="JTexture.h" />
     <ClInclude Include="UploadBuffer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +179,7 @@
     <ClCompile Include="d3dApp.cpp" />
     <ClCompile Include="d3dUtil.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
+    <ClCompile Include="DescriptorHeap.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="GeometryGenerator.cpp" />
@@ -172,8 +189,11 @@
     <ClCompile Include="imgui_impl_dx12.cpp" />
     <ClCompile Include="imgui_impl_win32.cpp" />
     <ClCompile Include="imgui_widgets.cpp" />
+    <ClCompile Include="JRtti.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MathHelper.cpp" />
+    <ClCompile Include="Name.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="PlayGround.cpp" />
     <ClCompile Include="RootSignature.cpp" />
     <ClCompile Include="ShadowMap.cpp" />

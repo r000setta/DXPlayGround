@@ -21,12 +21,6 @@ GeometryGenerator::MeshData GeometryGenerator::CreateBox(float width, float heig
 	float h2 = 0.5f*height;
 	float d2 = 0.5f*depth;
 
-	XMFLOAT3 vMin(-w2, -h2, -d2);
-	XMFLOAT3 vMax(w2, h2, d2);
-
-	meshData.VMin = XMLoadFloat3(&vMin);
-	meshData.VMax = XMLoadFloat3(&vMax);
-
 	// Fill in the front face vertex data.
 	v[0] = Vertex(-w2, -h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 	v[1] = Vertex(-w2, +h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -95,8 +89,11 @@ GeometryGenerator::MeshData GeometryGenerator::CreateBox(float width, float heig
 	i[30] = 20; i[31] = 21; i[32] = 22;
 	i[33] = 20; i[34] = 22; i[35] = 23;
 
-	meshData.Indices32.assign(&i[0], &i[36]);
+	BoundingBox box;
+	BoundingBox::CreateFromPoints(box, meshData.Vertices.size(), &meshData.Vertices[0].Position, sizeof(Vertex));
+	meshData.bounds = box;
 
+	meshData.Indices32.assign(&i[0], &i[36]);
     // Put a cap on the number of subdivisions.
     numSubdivisions = std::min<uint32>(numSubdivisions, 6u);
 
@@ -213,6 +210,10 @@ GeometryGenerator::MeshData GeometryGenerator::CreateSphere(float radius, uint32
 		meshData.Indices32.push_back(baseIndex+i);
 		meshData.Indices32.push_back(baseIndex+i+1);
 	}
+
+	BoundingBox box;
+	BoundingBox::CreateFromPoints(box, meshData.Vertices.size(), &meshData.Vertices[0].Position, sizeof(Vertex));
+	meshData.bounds = box;
 
     return meshData;
 }
@@ -382,6 +383,10 @@ GeometryGenerator::MeshData GeometryGenerator::CreateGeosphere(float radius, uin
 		XMStoreFloat3(&meshData.Vertices[i].TangentU, XMVector3Normalize(T));
 	}
 
+	BoundingBox box;
+	BoundingBox::CreateFromPoints(box, meshData.Vertices.size(), &meshData.Vertices[0].Position, sizeof(Vertex));
+	meshData.bounds = box;
+
     return meshData;
 }
 
@@ -475,6 +480,10 @@ GeometryGenerator::MeshData GeometryGenerator::CreateCylinder(float bottomRadius
 
 	BuildCylinderTopCap(bottomRadius, topRadius, height, sliceCount, stackCount, meshData);
 	BuildCylinderBottomCap(bottomRadius, topRadius, height, sliceCount, stackCount, meshData);
+
+	BoundingBox box;
+	BoundingBox::CreateFromPoints(box, meshData.Vertices.size(), &meshData.Vertices[0].Position, sizeof(Vertex));
+	meshData.bounds = box;
 
     return meshData;
 }
@@ -616,6 +625,10 @@ GeometryGenerator::MeshData GeometryGenerator::CreateGrid(float width, float dep
 		}
 	}
 
+	BoundingBox box;
+	BoundingBox::CreateFromPoints(box, meshData.Vertices.size(), &meshData.Vertices[0].Position, sizeof(Vertex));
+	meshData.bounds = box;
+
     return meshData;
 }
 
@@ -658,6 +671,10 @@ GeometryGenerator::MeshData GeometryGenerator::CreateQuad(float x, float y, floa
 	meshData.Indices32[3] = 0;
 	meshData.Indices32[4] = 2;
 	meshData.Indices32[5] = 3;
+
+	BoundingBox box;
+	BoundingBox::CreateFromPoints(box, meshData.Vertices.size(), &meshData.Vertices[0].Position, sizeof(Vertex));
+	meshData.bounds = box;
 
     return meshData;
 }

@@ -19,6 +19,27 @@
     <Filter Include="头文件\Graphics">
       <UniqueIdentifier>{9c191289-09f4-4535-a80e-5347fb3fa683}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Graphics\Shader">
+      <UniqueIdentifier>{9a1f76a8-fb6e-445f-b623-9da54cab7a1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Graphics\Pipeline">
+      <UniqueIdentifier>{7328c422-d797-4db6-99c9-a20b723b0b1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Graphics\Render">
+      <UniqueIdentifier>{5d52666d-fcb0-41c8-baa7-235009df6124}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Graphics\Management">
+      <UniqueIdentifier>{6e5509a9-0a48-4480-953a-3a327611cad1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Graphics\Resource">
+      <UniqueIdentifier>{e91ecd98-8f96-4e98-970a-a9c2b82479e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Core">
+      <UniqueIdentifier>{10900c40-29c7-4fc5-ba71-8f35bf8b1ed0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Core\rtti">
+      <UniqueIdentifier>{743e5038-8373-4afb-8504-662d297673b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameTimer.h">
@@ -68,6 +89,54 @@
     </ClInclude>
     <ClInclude Include="AnimationHelper.h">
       <Filter>头文件\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>头文件\Graphics\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyBox.h">
+      <Filter>头文件\Graphics\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>头文件\Graphics\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="PSOPool.h">
+      <Filter>头文件\Graphics\Management</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics.h">
+      <Filter>头文件\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderTarget.h">
+      <Filter>头文件\Graphics\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderTexture.h">
+      <Filter>头文件\Graphics\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>头文件\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="GPUResource.h">
+      <Filter>头文件\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="JTexture.h">
+      <Filter>头文件\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorHeap.h">
+      <Filter>头文件\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandBuffer.h">
+      <Filter>头文件\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferBase.h">
+      <Filter>头文件\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="JRtti.h">
+      <Filter>头文件\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="JProperty.h">
+      <Filter>头文件\Core\rtti</Filter>
+    </ClInclude>
+    <ClInclude Include="Name.h">
+      <Filter>头文件\Core\rtti</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -132,6 +201,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="AnimationHelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorHeap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="JRtti.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Name.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
