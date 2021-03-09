@@ -237,11 +237,24 @@ void PlayGroundApp::Draw(const GameTimer& gt)
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
+	static float width = 0.0f;
+	static float height = 0.0f;
+	static float length = 0.0f;
+
+	static float x = 0.0f;
+	static float y = 0.0f;
+	static float z = 0.0f;
 	ImGui::Begin("Info Panel");
 	ImGui::Text("Hit object:%s", mPickedRitem->Geo == nullptr ? "None" : mPickedRitem->Geo->Name.c_str());
+	ImGui::InputFloat("width", &width);
+	ImGui::InputFloat("height", &height);
+	ImGui::InputFloat("length", &length);
+	ImGui::InputFloat("x", &x);
+	ImGui::InputFloat("y", &y);
+	ImGui::InputFloat("z", &z);
 	if (ImGui::Button("Create"))
 	{
-		CreateBox();
+		CreateBox(width, length, height, x, y, z);
 	}
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
@@ -526,7 +539,7 @@ void PlayGroundApp::UpdateSsaoCB(const GameTimer& gt)
 	currSsaoCB->CopyData(0, ssaoCB);
 }
 
-void PlayGroundApp::CreateBox()
+void PlayGroundApp::CreateBox(float length, float width, float height, float x, float y, float z)
 {
 	GeometryGenerator geoGen;
 	GeometryGenerator::MeshData box = geoGen.CreateBox(1.0f, 1.0f, 1.0f, 3);
@@ -560,8 +573,10 @@ void PlayGroundApp::CreateBox()
 	const UINT boxvbByteSize = (UINT)boxVertices.size() * sizeof(Vertex);
 	const UINT boxibByteSize = (UINT)boxIndices.size() * sizeof(std::uint16_t);
 
+	std::string name = "boxGeo" + std::to_string(objNums + 1);
+
 	auto boxGeo = std::make_unique<MeshGeometry>();
-	boxGeo->Name = "boxGeo1";
+	boxGeo->Name = name;
 
 	ThrowIfFailed(D3DCreateBlob(boxvbByteSize, &boxGeo->VertexBufferCPU));
 	CopyMemory(boxGeo->VertexBufferCPU->GetBufferPointer(), boxVertices.data(), boxvbByteSize);
@@ -585,11 +600,11 @@ void PlayGroundApp::CreateBox()
 	mGeometries[boxGeo->Name] = std::move(boxGeo);
 
 	auto boxItem = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&boxItem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(3.0f, 0.0f, 0.0f));
+	XMStoreFloat4x4(&boxItem->World, XMMatrixScaling(length, width, height) * XMMatrixTranslation(x, y, z));
 	XMStoreFloat4x4(&boxItem->TexTransform, XMMatrixScaling(1.0f, 1.0f, 1.0f));
 	boxItem->ObjCBIndex = objNums++;
 	boxItem->Mat = mMaterials["bricks0"].get();
-	boxItem->Geo = mGeometries["boxGeo1"].get();
+	boxItem->Geo = mGeometries[name].get();
 	boxItem->Bounds = boxItem->Geo->DrawArgs["box"].Bounds;
 	boxItem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	boxItem->IndexCount = boxItem->Geo->DrawArgs["box"].IndexCount;

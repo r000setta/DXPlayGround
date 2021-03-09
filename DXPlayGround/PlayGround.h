@@ -85,7 +85,7 @@ private:
 	void UpdateShadowPassCB(const GameTimer& gt);
 	void UpdateSsaoCB(const GameTimer& gt);
 
-	void CreateBox();
+	void CreateBox(float length, float width, float height, float x, float y, float z);
 
 	void DefineSkullAnimation();
 	void LoadTextures();
