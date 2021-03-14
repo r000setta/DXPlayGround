@@ -70,6 +70,7 @@ VertexOut VS(VertexIn vin)
 
 float4 PS(VertexOut pin) : SV_Target
 {
+	// Fetch the material data.
 	MaterialData matData = gMaterialData[gMaterialIndex];
 	float4 diffuseAlbedo = matData.DiffuseAlbedo;
 	float3 fresnelR0 = matData.FresnelR0;
@@ -100,24 +101,19 @@ float4 PS(VertexOut pin) : SV_Target
 
     const float shininess = (1.0f - roughness) * normalMapSample.a;
     Material mat = { diffuseAlbedo, fresnelR0, shininess };
-    float4 Lo = ComputeLighting(gLights, mat, pin.PosW,
+    float4 directLight = ComputeLighting(gLights, mat, pin.PosW,
         bumpedNormalW, toEyeW, shadowFactor, roughness);
 
-    float3 litColor = ambient.rgb + Lo;
+    float4 litColor = ambient + directLight;
 
-    float Gamma = 1.0f / 2.2f;
-
-    litColor = litColor / (litColor +float3(1.0f,1.0f,1.0f));
-    litColor = pow(litColor,float3(Gamma,Gamma,Gamma));
-
-    //float3 r = reflect(-toEyeW, bumpedNormalW);
-    //float4 reflectionColor = gCubeMap.Sample(gsamLinearWrap, r);
-    //float3 fresnelFactor = SchlickFresnel(fresnelR0, bumpedNormalW, r);
-    //litColor.rgb += fresnelFactor * reflectionColor.rgb;
+    float3 r = reflect(-toEyeW, bumpedNormalW);
+    float4 reflectionColor = gCubeMap.Sample(gsamLinearWrap, r);
+    float3 fresnelFactor = SchlickFresnel(fresnelR0, bumpedNormalW, r);
+    litColor.rgb += shininess * fresnelFactor * reflectionColor.rgb;
 	
-    //litColor.a = diffuseAlbedo.a;
+    litColor.a = diffuseAlbedo.a;
 
-    return float4(litColor,diffuseAlbedo.a);
+    return litColor;
 }
 
 

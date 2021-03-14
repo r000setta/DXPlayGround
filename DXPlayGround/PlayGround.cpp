@@ -28,7 +28,7 @@ bool PlayGroundApp::Initialize()
 
 	mCamera.SetPosition(0.0f, 2.0f, -15.0f);
 
-	mBlurFilter = std::make_unique<BlurFilter>(md3dDevice.Get(), mClientWidth, mClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+	//mBlurFilter = std::make_unique<BlurFilter>(md3dDevice.Get(), mClientWidth, mClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 	mShadowMap = std::make_unique<ShadowMap>(md3dDevice.Get(), 2048, 2048);
 	mSsao = std::make_unique<Ssao>(
 		md3dDevice.Get(),
@@ -37,7 +37,7 @@ bool PlayGroundApp::Initialize()
 
 	LoadTextures();
 	BuildRootSignature();
-	BuildPostProcessRootSignature();
+	//BuildPostProcessRootSignature();
 	BuildSsaoRootSignature();
 	BuildDescriptorHeaps();
 	BuildShadersAndInputLayout();
@@ -76,6 +76,22 @@ void PlayGroundApp::CreateRtvAndDsvDescriptorHeaps()
 	dsvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
 		&dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));
+
+	//D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc2;
+	//rtvHeapDesc2.NumDescriptors = 1;
+	//rtvHeapDesc2.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	//rtvHeapDesc2.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	//rtvHeapDesc2.NodeMask = 0;
+	//ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
+	//	&rtvHeapDesc2, IID_PPV_ARGS(mMsaaRtvHeap.GetAddressOf())));
+
+	//D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc2;
+	//dsvHeapDesc2.NumDescriptors = 1;
+	//dsvHeapDesc2.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	//dsvHeapDesc2.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	//dsvHeapDesc2.NodeMask = 0;
+	//ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
+	//	&dsvHeapDesc2, IID_PPV_ARGS(mMsaaDsvHeap.GetAddressOf())));
 }
 
 void PlayGroundApp::OnResize()
@@ -84,10 +100,10 @@ void PlayGroundApp::OnResize()
 	mCamera.SetLens(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 	BoundingFrustum::CreateFromMatrix(mCamFrustum, mCamera.GetProj());
 
-	if (mBlurFilter != nullptr)
+	/*if (mBlurFilter != nullptr)
 	{
 		mBlurFilter->OnResize(mClientWidth, mClientHeight);
-	}
+	}*/
 
 	if (mSsao != nullptr)
 	{
@@ -176,35 +192,18 @@ void PlayGroundApp::Draw(const GameTimer& gt)
 	mCommandList->RSSetViewports(1, &mScreenViewport);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-	if (m4xMsaaState)
-	{
-		ID3D12Resource* backBuffer = CurrentBackBuffer();
-		D3D12_RESOURCE_BARRIER barriers[2] =
-		{
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				mMsaaRenderTarget.Get(),
-				D3D12_RESOURCE_STATE_RENDER_TARGET,
-				D3D12_RESOURCE_STATE_RESOLVE_SOURCE),
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				backBuffer,
-				D3D12_RESOURCE_STATE_PRESENT,
-				D3D12_RESOURCE_STATE_RESOLVE_DEST)
-		};
-		mCommandList->ResourceBarrier(2, barriers);
-
-		mCommandList->ResolveSubresource(backBuffer, 0, mMsaaRenderTarget.Get(), 0, mBackBufferFormat);
-		D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			backBuffer,
-			D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT);
-		mCommandList->ResourceBarrier(1, &barrier);
-	};
 
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
+	//msaa
+	//mCommandList->ClearDepthStencilView(mMsaaDsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
 	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	//mCommandList->ClearRenderTargetView(mMsaaRtvHeap->GetCPUDescriptorHandleForHeapStart(), Colors::LightSteelBlue, 0, nullptr);
 
 	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+	//mCommandList->OMSetRenderTargets(1, &mMsaaRtvHeap->GetCPUDescriptorHandleForHeapStart(), true, &mMsaaDsvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	mCommandList->SetGraphicsRootDescriptorTable(4, mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
@@ -221,13 +220,13 @@ void PlayGroundApp::Draw(const GameTimer& gt)
 	//mCommandList->SetPipelineState(mPSOs["debug"].Get());
 	//DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Debug]);
 
-	mCommandList->SetPipelineState(mPSOs["sky"].Get());
-	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Sky]);
+	//mCommandList->SetPipelineState(mPSOs["sky"].Get());
+	//DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Sky]);
 
-	mBlurFilter->Execute(mCommandList.Get(), mPostProcessRootSignature.Get(), mPSOs["horzBlur"].Get(), mPSOs["vertBlur"].Get(), CurrentBackBuffer(), 0);
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
-	mCommandList->CopyResource(CurrentBackBuffer(), mBlurFilter->Output());
+	//mBlurFilter->Execute(mCommandList.Get(), mPostProcessRootSignature.Get(), mPSOs["horzBlur"].Get(), mPSOs["vertBlur"].Get(), CurrentBackBuffer(), 0);
+	//mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+	//	D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+	//mCommandList->CopyResource(CurrentBackBuffer(), mBlurFilter->Output());
 
 
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
@@ -262,6 +261,29 @@ void PlayGroundApp::Draw(const GameTimer& gt)
 	mCommandList->SetDescriptorHeaps(1, mSrvHeap.GetAddressOf());
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
+
+	if (m4xMsaaState)
+	{
+		ID3D12Resource* backBuffer = CurrentBackBuffer();
+		D3D12_RESOURCE_BARRIER barriers[2] =
+		{
+			CD3DX12_RESOURCE_BARRIER::Transition(
+				backBuffer,
+				D3D12_RESOURCE_STATE_PRESENT,
+				D3D12_RESOURCE_STATE_RESOLVE_DEST),
+			CD3DX12_RESOURCE_BARRIER::Transition(
+				mMsaaRenderTarget.Get(),
+				D3D12_RESOURCE_STATE_RENDER_TARGET,
+				D3D12_RESOURCE_STATE_RESOLVE_SOURCE)
+		};
+		mCommandList->ResourceBarrier(2, barriers);
+
+		mCommandList->ResolveSubresource(backBuffer, 0, mMsaaRenderTarget.Get(), 0, mBackBufferFormat);
+		std::swap(barriers[0].Transition.StateBefore, barriers[0].Transition.StateAfter);
+		std::swap(barriers[1].Transition.StateBefore, barriers[1].Transition.StateAfter);
+		mCommandList->ResourceBarrier(2, barriers);
+
+	};
 
 	ThrowIfFailed(mCommandList->Close());
 
@@ -727,41 +749,41 @@ void PlayGroundApp::BuildRootSignature()
 		IID_PPV_ARGS(mRootSignature.GetAddressOf())));
 }
 
-void PlayGroundApp::BuildPostProcessRootSignature()
-{
-	CD3DX12_DESCRIPTOR_RANGE srvTable;
-	srvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-
-	CD3DX12_DESCRIPTOR_RANGE uavTable;
-	uavTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-
-	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
-
-	slotRootParameter[0].InitAsConstants(12, 0);
-	slotRootParameter[1].InitAsDescriptorTable(1, &srvTable);
-	slotRootParameter[2].InitAsDescriptorTable(1, &uavTable);
-
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(3, slotRootParameter,
-		0, nullptr,
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-	ComPtr<ID3DBlob> serializedRootSig = nullptr;
-	ComPtr<ID3DBlob> errorBlob = nullptr;
-	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
-
-	if (errorBlob != nullptr)
-	{
-		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-	}
-	ThrowIfFailed(hr);
-
-	ThrowIfFailed(md3dDevice->CreateRootSignature(
-		0,
-		serializedRootSig->GetBufferPointer(),
-		serializedRootSig->GetBufferSize(),
-		IID_PPV_ARGS(mPostProcessRootSignature.GetAddressOf())));
-}
+//void PlayGroundApp::BuildPostProcessRootSignature()
+//{
+//	CD3DX12_DESCRIPTOR_RANGE srvTable;
+//	srvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+//
+//	CD3DX12_DESCRIPTOR_RANGE uavTable;
+//	uavTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+//
+//	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
+//
+//	slotRootParameter[0].InitAsConstants(12, 0);
+//	slotRootParameter[1].InitAsDescriptorTable(1, &srvTable);
+//	slotRootParameter[2].InitAsDescriptorTable(1, &uavTable);
+//
+//	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(3, slotRootParameter,
+//		0, nullptr,
+//		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+//
+//	ComPtr<ID3DBlob> serializedRootSig = nullptr;
+//	ComPtr<ID3DBlob> errorBlob = nullptr;
+//	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+//		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+//
+//	if (errorBlob != nullptr)
+//	{
+//		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+//	}
+//	ThrowIfFailed(hr);
+//
+//	ThrowIfFailed(md3dDevice->CreateRootSignature(
+//		0,
+//		serializedRootSig->GetBufferPointer(),
+//		serializedRootSig->GetBufferSize(),
+//		IID_PPV_ARGS(mPostProcessRootSignature.GetAddressOf())));
+//}
 
 void PlayGroundApp::BuildSsaoRootSignature()
 {
@@ -918,11 +940,11 @@ void PlayGroundApp::BuildDescriptorHeaps()
 		mCbvSrvUavDescriptorSize,
 		mRtvDescriptorSize);
 
-	mBlurFilter->BuildDescriptors(
-		GetCpuSrv(mNullTexSrvIndex2 + 1),
-		GetGpuSrv(mNullTexSrvIndex2 + 1),
-		mCbvSrvUavDescriptorSize);
-	
+	//mBlurFilter->BuildDescriptors(
+	//	GetCpuSrv(mNullTexSrvIndex2 + 1),
+	//	GetGpuSrv(mNullTexSrvIndex2 + 1),
+	//	mCbvSrvUavDescriptorSize);
+	//
 }
 
 void PlayGroundApp::BuildShadersAndInputLayout()
@@ -1284,6 +1306,7 @@ void PlayGroundApp::BuildPSOs()
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc = basePsoDesc;
 	opaquePsoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_EQUAL;
 	opaquePsoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	opaquePsoDesc.RasterizerState.MultisampleEnable = TRUE;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC smapPsoDesc = basePsoDesc;
@@ -1408,7 +1431,7 @@ void PlayGroundApp::BuildPSOs()
 	};
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&skyPsoDesc, IID_PPV_ARGS(&mPSOs["sky"])));
 
-	D3D12_COMPUTE_PIPELINE_STATE_DESC horzBlurPSO = {};
+	/*D3D12_COMPUTE_PIPELINE_STATE_DESC horzBlurPSO = {};
 	horzBlurPSO.pRootSignature = mPostProcessRootSignature.Get();
 	horzBlurPSO.CS =
 	{
@@ -1427,7 +1450,7 @@ void PlayGroundApp::BuildPSOs()
 	};
 
 	vertBlurPSO.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-	ThrowIfFailed(md3dDevice->CreateComputePipelineState(&vertBlurPSO, IID_PPV_ARGS(&mPSOs["vertBlur"])));
+	ThrowIfFailed(md3dDevice->CreateComputePipelineState(&vertBlurPSO, IID_PPV_ARGS(&mPSOs["vertBlur"])));*/
 
 }
 

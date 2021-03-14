@@ -90,7 +90,7 @@ private:
 	void DefineSkullAnimation();
 	void LoadTextures();
 	void BuildRootSignature();
-	void BuildPostProcessRootSignature();
+	//void BuildPostProcessRootSignature();
 	void BuildSsaoRootSignature();
 	void BuildDescriptorHeaps();
 	void BuildShadersAndInputLayout();
@@ -117,12 +117,12 @@ private:
 	int mCurrFrameResourceIdx = 0;
 
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-	ComPtr<ID3D12RootSignature> mPostProcessRootSignature = nullptr;
+	//ComPtr<ID3D12RootSignature> mPostProcessRootSignature = nullptr;
 	ComPtr<ID3D12RootSignature> mSsaoRootSignature = nullptr;
 
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 
-	std::unique_ptr<BlurFilter> mBlurFilter;
+	//std::unique_ptr<BlurFilter> mBlurFilter;
 
 	bool mFrustumCullingEnabled = true;
 	BoundingFrustum mCamFrustum;

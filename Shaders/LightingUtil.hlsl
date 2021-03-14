@@ -1,9 +1,3 @@
-//***************************************************************************************
-// LightingUtil.hlsl by Frank Luna (C) 2015 All Rights Reserved.
-//
-// Contains API for shader lighting.
-//***************************************************************************************
-
 #define MaxLights 16
 
 struct Light
@@ -23,14 +17,53 @@ struct Material
     float Shininess;
 };
 
+#define PI 3.14159265359f
+
+float DistributionGGX(float3 N, float3 H, float roughness)
+{
+    float Alpha = roughness * roughness;
+    float Alpha2 = Alpha * Alpha;
+    float NdotH = saturate(dot(N, H));
+    float NdotH2 = NdotH * NdotH;
+
+    float Nom =  Alpha2;
+    float Denom = (NdotH2 * (Alpha2 - 1.0) + 1.0);
+    Denom = PI * Denom * Denom;
+    return Nom / max(Denom,0.001);
+}
+
+float GeometrySchlickGGX(float NDotV, float roughness)
+{
+    float R = (roughness + 1.0);
+    float K = (R * R) / 8.0;
+
+    float Nom = NDotV;
+    float Denom = NDotV * (1.0 - K) + K;
+
+    return Nom / Denom;
+}
+
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = saturate(dot(N, V));
+    float NdotL = saturate(dot(N, L));
+    
+    float ggx2= GeometrySchlickGGX(NdotV,roughness);
+    float ggx1= GeometrySchlickGGX(NdotL,roughness);
+
+    return ggx1 * ggx2;
+}
+
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
 float CalcAttenuation(float d, float falloffStart, float falloffEnd)
 {
-    // Linear falloff.
     return saturate((falloffEnd-d) / (falloffEnd - falloffStart));
 }
 
-// Schlick gives an approximation to Fresnel reflectance (see pg. 233 "Real-Time Rendering 3rd Ed.").
-// R0 = ( (n-1)/(n+1) )^2, where n is the index of refraction.
 float3 SchlickFresnel(float3 R0, float3 normal, float3 lightVec)
 {
     float cosIncidentAngle = saturate(dot(normal, lightVec));
@@ -51,31 +84,48 @@ float3 BlinnPhong(float3 lightStrength, float3 lightVec, float3 normal, float3 t
 
     float3 specAlbedo = fresnelFactor*roughnessFactor;
 
-    // Our spec formula goes outside [0,1] range, but we are 
-    // doing LDR rendering.  So scale it down a bit.
     specAlbedo = specAlbedo / (specAlbedo + 1.0f);
 
     return (mat.DiffuseAlbedo.rgb + specAlbedo) * lightStrength;
 }
 
-//---------------------------------------------------------------------------------------
-// Evaluates the lighting equation for directional lights.
-//---------------------------------------------------------------------------------------
-float3 ComputeDirectionalLight(Light L, Material mat, float3 normal, float3 toEye)
+float3 ComputeDirectionalLight(Light L, Material mat, float3 normal, float3 toEye, float roughness)
 {
-    // The light vector aims opposite the direction the light rays travel.
+    roughness = 0.8f;
     float3 lightVec = -L.Direction;
+    float3 H = normalize(lightVec + toEye);
 
-    // Scale light down by Lambert's cosine law.
-    float ndotl = max(dot(lightVec, normal), 0.0f);
-    float3 lightStrength = L.Strength * ndotl;
+    float3 Lo = float3(0.0f,0.0f,0.0f);
 
-    return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
+    float Distance = length(lightVec);
+    float Attenuation = CalcAttenuation(Distance,L.FalloffStart, L.FalloffEnd);
+    float3 Radiance = float3(1.0f,1.0f,1.0f);
+
+    float NDF = DistributionGGX(normal, H, roughness);
+    float G = GeometrySmith(normal, toEye, lightVec, roughness);
+    float3 F = mat.FresnelR0;
+    float3 Numerator = NDF * G * F;
+    float Denominator = 4.0f * saturate(dot(normal, toEye)) * saturate(dot(normal, lightVec));
+    
+    float3 Specular = Numerator / max(Denominator, 0.001f);
+    
+    float3 KS = F;
+    float3 KD = float3(1.0f, 1.0f, 1.0f) - KS;
+
+    KD *= 1.0f - 0.8f;
+
+    float NoL = saturate(dot(lightVec, normal));
+
+    Lo += (KD * mat.DiffuseAlbedo.rgb / PI + Specular) * Radiance * NoL;
+
+    return Lo;
+    //float3 lightStrength = L.Strength * ndotl;
+
+    //return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
 }
 
-//---------------------------------------------------------------------------------------
-// Evaluates the lighting equation for point lights.
-//---------------------------------------------------------------------------------------
+
+
 float3 ComputePointLight(Light L, Material mat, float3 pos, float3 normal, float3 toEye)
 {
     // The vector from the surface to the light.
@@ -102,15 +152,10 @@ float3 ComputePointLight(Light L, Material mat, float3 pos, float3 normal, float
     return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
 }
 
-//---------------------------------------------------------------------------------------
-// Evaluates the lighting equation for spot lights.
-//---------------------------------------------------------------------------------------
 float3 ComputeSpotLight(Light L, Material mat, float3 pos, float3 normal, float3 toEye)
 {
-    // The vector from the surface to the light.
     float3 lightVec = L.Position - pos;
 
-    // The distance from surface to light.
     float d = length(lightVec);
 
     // Range test.
@@ -137,34 +182,34 @@ float3 ComputeSpotLight(Light L, Material mat, float3 pos, float3 normal, float3
 
 float4 ComputeLighting(Light gLights[MaxLights], Material mat,
                        float3 pos, float3 normal, float3 toEye,
-                       float3 shadowFactor)
+                       float3 shadowFactor, float roughness)
 {
-    float3 result = 0.0f;
+    float3 Lo = float3(0.0f,0.0f,0.0f);
 
     int i = 0;
 
 #if (NUM_DIR_LIGHTS > 0)
     for(i = 0; i < NUM_DIR_LIGHTS; ++i)
     {
-        result += shadowFactor[i] * ComputeDirectionalLight(gLights[i], mat, normal, toEye);
+        Lo += shadowFactor[i] * ComputeDirectionalLight(gLights[i], mat, normal, toEye, roughness);
     }
 #endif
 
 #if (NUM_POINT_LIGHTS > 0)
     for(i = NUM_DIR_LIGHTS; i < NUM_DIR_LIGHTS+NUM_POINT_LIGHTS; ++i)
     {
-        result += ComputePointLight(gLights[i], mat, pos, normal, toEye);
+        Lo += ComputePointLight(gLights[i], mat, pos, normal, toEye);
     }
 #endif
 
 #if (NUM_SPOT_LIGHTS > 0)
     for(i = NUM_DIR_LIGHTS + NUM_POINT_LIGHTS; i < NUM_DIR_LIGHTS + NUM_POINT_LIGHTS + NUM_SPOT_LIGHTS; ++i)
     {
-        result += ComputeSpotLight(gLights[i], mat, pos, normal, toEye);
+        Lo += ComputeSpotLight(gLights[i], mat, pos, normal, toEye);
     }
 #endif 
 
-    return float4(result, 0.0f);
+    return float4(Lo, 0.0f);
 }
 
 

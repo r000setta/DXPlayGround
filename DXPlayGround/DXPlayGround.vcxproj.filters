@@ -40,6 +40,15 @@
     <Filter Include="头文件\Core\rtti">
       <UniqueIdentifier>{743e5038-8373-4afb-8504-662d297673b2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Core\memory">
+      <UniqueIdentifier>{9a04e76e-c8e9-4bca-b739-e923341c3b20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Core\memory\allocation">
+      <UniqueIdentifier>{705ab331-fc17-443b-b95e-3f5d961704bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{0b4fd54f-522a-4b5d-a3b9-a912107bec47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameTimer.h">
@@ -138,6 +147,9 @@
     <ClInclude Include="Name.h">
       <Filter>头文件\Core\rtti</Filter>
     </ClInclude>
+    <ClInclude Include="AllocationManager.h">
+      <Filter>头文件\Core\memory\allocation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameTimer.cpp">
@@ -215,5 +227,43 @@
     <ClCompile Include="Object.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="AllocationManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\Shaders\Common.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\Default.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\DrawNormals.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\LightingUtil.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\PBR.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\ShadowDebug.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\Shadows.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\Sky.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\Ssao.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\SsaoBlur.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\DefaultPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

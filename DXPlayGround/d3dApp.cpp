@@ -214,6 +214,11 @@ void D3DApp::OnResize()
 	// Create descriptor to mip level 0 of entire resource using the format of the resource.
 	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), nullptr, DepthStencilView());
 
+	//MSAA
+	//md3dDevice->CreateRenderTargetView(mMsaaRenderTarget.Get(), nullptr, mMsaaRtvHeap->GetCPUDescriptorHandleForHeapStart());
+	//md3dDevice->CreateDepthStencilView(mMsaaRenderDepth.Get(), nullptr, mMsaaDsvHeap->GetCPUDescriptorHandleForHeapStart());
+	//
+
 	// Transition the resource from its initial state to be used as a depth buffer.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDepthStencilBuffer.Get(),
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));

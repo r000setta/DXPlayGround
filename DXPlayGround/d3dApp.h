@@ -101,13 +101,16 @@ protected:
     Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mRtvHeap;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mMsaaRtvHeap;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDsvHeap;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mMsaaDsvHeap;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvHeap;
 
     bool m4xMsaaState = false;
     UINT m4xMsaaQuality = 0;
 
     Microsoft::WRL::ComPtr<ID3D12Resource> mMsaaRenderTarget;
+    Microsoft::WRL::ComPtr<ID3D12Resource> mMsaaRenderDepth;
 
     D3D12_VIEWPORT mScreenViewport;
     D3D12_RECT mScissorRect;
