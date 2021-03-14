@@ -681,6 +681,9 @@ void PlayGroundApp::LoadTextures()
 		"tileNormalMap",
 		"defaultDiffuseMap",
 		"defaultNormalMap",
+		"rustMetallicMap", //6
+		"rustNormalMap",   //7 
+		"rustAlbedoMap",  //8
 		"skyCubeMap"
 	};
 
@@ -692,6 +695,9 @@ void PlayGroundApp::LoadTextures()
 		L"D:/c++/DXPlayGround/Textures/tile_nmap.dds",
 		L"D:/c++/DXPlayGround/Textures/white1x1.dds",
 		L"D:/c++/DXPlayGround/Textures/default_nmap.dds",
+		L"D:/c++/DXPlayGround/Textures/rustnormal.dds",
+		L"D:/c++/DXPlayGround/Textures/rustmetallic.dds",
+		L"D:/c++/DXPlayGround/Textures/rustbasecolor.dds",
 		L"D:/c++/DXPlayGround/Textures/snowcube1024.dds"
 	};
 
@@ -862,7 +868,7 @@ void PlayGroundApp::BuildSsaoRootSignature()
 void PlayGroundApp::BuildDescriptorHeaps()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 24;
+	srvHeapDesc.NumDescriptors = 30;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
@@ -876,7 +882,10 @@ void PlayGroundApp::BuildDescriptorHeaps()
 		mTextures["tileDiffuseMap"]->Resource,
 		mTextures["tileNormalMap"]->Resource,
 		mTextures["defaultDiffuseMap"]->Resource,
-		mTextures["defaultNormalMap"]->Resource
+		mTextures["defaultNormalMap"]->Resource,
+		mTextures["rustMetallicMap"]->Resource,
+		mTextures["rustNormalMap"]->Resource,
+		mTextures["rustAlbedoMap"]->Resource,
 	};
 
 	auto skyCubeMap = mTextures["skyCubeMap"]->Resource;
@@ -1470,6 +1479,7 @@ void PlayGroundApp::BuildMaterials()
 	bricks0->MatCBIndex = 0;
 	bricks0->DiffuseSrvHeapIndex = 0;
 	bricks0->NormalSrvHeapIndex = 1;
+	bricks0->MetallicSrvHeapIndex = 7;
 	bricks0->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	bricks0->FresnelR0 = XMFLOAT3(0.1f, 0.1f, 0.1f);
 	bricks0->Roughness = 0.3f;
@@ -1478,6 +1488,7 @@ void PlayGroundApp::BuildMaterials()
 	tile0->Name = "tile0";
 	tile0->MatCBIndex = 2;
 	tile0->DiffuseSrvHeapIndex = 2;
+	tile0->MetallicSrvHeapIndex = 7;
 	tile0->NormalSrvHeapIndex = 3;
 	tile0->DiffuseAlbedo = XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f);
 	tile0->FresnelR0 = XMFLOAT3(0.2f, 0.2f, 0.2f);
@@ -1488,6 +1499,7 @@ void PlayGroundApp::BuildMaterials()
 	mirror0->MatCBIndex = 3;
 	mirror0->DiffuseSrvHeapIndex = 4;
 	mirror0->NormalSrvHeapIndex = 5;
+	mirror0->MetallicSrvHeapIndex = 7;
 	mirror0->DiffuseAlbedo = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	mirror0->FresnelR0 = XMFLOAT3(0.98f, 0.97f, 0.95f);
 	mirror0->Roughness = 0.1f;
@@ -1497,6 +1509,7 @@ void PlayGroundApp::BuildMaterials()
 	sky->MatCBIndex = 4;
 	sky->DiffuseSrvHeapIndex = 6;
 	sky->NormalSrvHeapIndex = 7;
+	sky->MetallicSrvHeapIndex = 7;
 	sky->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	sky->FresnelR0 = XMFLOAT3(0.1f, 0.1f, 0.1f);
 	sky->Roughness = 1.0f;
@@ -1505,6 +1518,7 @@ void PlayGroundApp::BuildMaterials()
 	highlight0->Name = "highlight0";
 	highlight0->MatCBIndex = 5;
 	highlight0->DiffuseSrvHeapIndex = 0;
+	highlight0->MetallicSrvHeapIndex = 7;
 	highlight0->NormalSrvHeapIndex = 7;
 	highlight0->DiffuseAlbedo = XMFLOAT4(0.0f, 1.0f, 1.0f, 0.6f);
 	highlight0->FresnelR0 = XMFLOAT3(0.06f, 0.06f, 0.06f);
@@ -1514,10 +1528,22 @@ void PlayGroundApp::BuildMaterials()
 	skullMat->Name = "skullMat";
 	skullMat->MatCBIndex = 6;
 	skullMat->DiffuseSrvHeapIndex = 4;
+	skullMat->MetallicSrvHeapIndex = 7;
 	skullMat->NormalSrvHeapIndex = 5;
 	skullMat->DiffuseAlbedo = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	skullMat->FresnelR0 = XMFLOAT3(0.8f, 0.8f, 0.8f);
 	skullMat->Roughness = 0.01f;
+
+	auto rusted = std::make_unique<Material>();
+	rusted->Name = "rusted";
+	rusted->MatCBIndex = 7;
+	rusted->DiffuseSrvHeapIndex = 8;
+	rusted->NormalSrvHeapIndex = 1;
+	//rusted->NormalSrvHeapIndex = 7;
+	rusted->MetallicSrvHeapIndex = 6;
+	rusted->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	rusted->FresnelR0 = XMFLOAT3(0.98f, 0.97f, 0.95f);
+	rusted->Roughness = 0.1f;
 
 	mMaterials["bricks0"] = std::move(bricks0);
 	mMaterials["tile0"] = std::move(tile0);
@@ -1525,6 +1551,7 @@ void PlayGroundApp::BuildMaterials()
 	mMaterials["sky"] = std::move(sky);
 	mMaterials["highlight0"] = std::move(highlight0);
 	mMaterials["skullMat"] = std::move(skullMat);
+	mMaterials["rusted"] = std::move(rusted);
 }
 
 void PlayGroundApp::BuildRenderItems()
@@ -1643,7 +1670,7 @@ void PlayGroundApp::BuildRenderItems()
 		XMStoreFloat4x4(&leftSphereRitem->World, leftSphereWorld);
 		leftSphereRitem->TexTransform = MathHelper::Identity4x4();
 		leftSphereRitem->ObjCBIndex = objNums++;
-		leftSphereRitem->Mat = mMaterials["mirror0"].get();
+		leftSphereRitem->Mat = mMaterials["rusted"].get();
 		leftSphereRitem->Geo = mGeometries["shapeGeo"].get();
 		leftSphereRitem->Bounds = leftSphereRitem->Geo->DrawArgs["sphere"].Bounds;
 		leftSphereRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -1654,7 +1681,7 @@ void PlayGroundApp::BuildRenderItems()
 		XMStoreFloat4x4(&rightSphereRitem->World, rightSphereWorld);
 		rightSphereRitem->TexTransform = MathHelper::Identity4x4();
 		rightSphereRitem->ObjCBIndex = objNums++;
-		rightSphereRitem->Mat = mMaterials["mirror0"].get();
+		rightSphereRitem->Mat = mMaterials["rusted"].get();
 		rightSphereRitem->Geo = mGeometries["shapeGeo"].get();
 		rightSphereRitem->Bounds = rightSphereRitem->Geo->DrawArgs["sphere"].Bounds;
 		rightSphereRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;

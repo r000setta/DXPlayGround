@@ -89,9 +89,9 @@ float3 BlinnPhong(float3 lightStrength, float3 lightVec, float3 normal, float3 t
     return (mat.DiffuseAlbedo.rgb + specAlbedo) * lightStrength;
 }
 
-float3 ComputeDirectionalLight(Light L, Material mat, float3 normal, float3 toEye, float roughness)
+float3 ComputeDirectionalLight(Light L, Material mat, float3 normal, float3 toEye, float roughness, float metallic)
 {
-    roughness = 0.8f;
+    roughness = 0.6f;
     float3 lightVec = -L.Direction;
     float3 H = normalize(lightVec + toEye);
 
@@ -112,16 +112,16 @@ float3 ComputeDirectionalLight(Light L, Material mat, float3 normal, float3 toEy
     float3 KS = F;
     float3 KD = float3(1.0f, 1.0f, 1.0f) - KS;
 
-    KD *= 1.0f - 0.8f;
+    KD *= 1.0f - metallic;
 
-    float NoL = saturate(dot(lightVec, normal));
+    float NdotL = saturate(dot(lightVec, normal));
 
-    Lo += (KD * mat.DiffuseAlbedo.rgb / PI + Specular) * Radiance * NoL;
+    Lo += (KD * mat.DiffuseAlbedo.rgb / PI + Specular) * Radiance * NdotL;
 
-    return Lo;
-    //float3 lightStrength = L.Strength * ndotl;
+    //return Lo;
+    float3 lightStrength = L.Strength * NdotL;
 
-    //return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
+    return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
 }
 
 
@@ -182,7 +182,7 @@ float3 ComputeSpotLight(Light L, Material mat, float3 pos, float3 normal, float3
 
 float4 ComputeLighting(Light gLights[MaxLights], Material mat,
                        float3 pos, float3 normal, float3 toEye,
-                       float3 shadowFactor, float roughness)
+                       float3 shadowFactor, float roughness, float metallic)
 {
     float3 Lo = float3(0.0f,0.0f,0.0f);
 
@@ -191,7 +191,7 @@ float4 ComputeLighting(Light gLights[MaxLights], Material mat,
 #if (NUM_DIR_LIGHTS > 0)
     for(i = 0; i < NUM_DIR_LIGHTS; ++i)
     {
-        Lo += shadowFactor[i] * ComputeDirectionalLight(gLights[i], mat, normal, toEye, roughness);
+        Lo += shadowFactor[i] * ComputeDirectionalLight(gLights[i], mat, normal, toEye, roughness, metallic);
     }
 #endif
 

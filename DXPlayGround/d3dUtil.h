@@ -232,11 +232,14 @@ struct Material
 
     int NormalSrvHeapIndex = -1;
 
+    int MetallicSrvHeapIndex = -1;
+
     int NumFramesDirty = gNumFrameResources;
 
     DirectX::XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
     DirectX::XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
     float Roughness = .25f;
+    float Smoothness = 0.5f;
     DirectX::XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
 };
 

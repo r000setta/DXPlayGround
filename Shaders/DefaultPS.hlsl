@@ -74,15 +74,19 @@ float4 PS(VertexOut pin) : SV_Target
 	MaterialData matData = gMaterialData[gMaterialIndex];
 	float4 diffuseAlbedo = matData.DiffuseAlbedo;
 	float3 fresnelR0 = matData.FresnelR0;
+    float  smoothness = matData.Smoothness;
 	float  roughness = matData.Roughness;
 	uint diffuseMapIndex = matData.DiffuseMapIndex;
 	uint normalMapIndex = matData.NormalMapIndex;
+	uint metallicMapIndex = matData.MetallicMapIndex;
 	
     diffuseAlbedo *= gTextureMaps[diffuseMapIndex].Sample(gsamAnisotropicWrap, pin.TexC);
 
 #ifdef ALPHA_TEST
     clip(diffuseAlbedo.a - 0.1f);
 #endif
+
+    float metallic = gTextureMaps[metallicMapIndex].Sample(gsamAnisotropicWrap,pin.TexC);
 
     pin.NormalW = normalize(pin.NormalW);
 	
@@ -102,7 +106,7 @@ float4 PS(VertexOut pin) : SV_Target
     const float shininess = (1.0f - roughness) * normalMapSample.a;
     Material mat = { diffuseAlbedo, fresnelR0, shininess };
     float4 directLight = ComputeLighting(gLights, mat, pin.PosW,
-        bumpedNormalW, toEyeW, shadowFactor, roughness);
+        bumpedNormalW, toEyeW, shadowFactor, roughness, metallic);
 
     float4 litColor = ambient + directLight;
 
