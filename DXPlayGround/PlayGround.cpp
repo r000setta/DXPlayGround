@@ -123,9 +123,9 @@ void PlayGroundApp::Update(const GameTimer& gt)
 		mAnimTimePos = 0.0f;
 	}
 
-	mSkullAnimation.Interpolate(mAnimTimePos, mSkullWorld);
-	mSkullRitem->World = mSkullWorld;
-	mSkullRitem->NumFramesDirty = gNumFrameResources;
+	//mSkullAnimation.Interpolate(mAnimTimePos, mSkullWorld);
+	//mSkullRitem->World = mSkullWorld;
+	//mSkullRitem->NumFramesDirty = gNumFrameResources;
 
 	mCurrFrameResourceIdx = (mCurrFrameResourceIdx + 1) % gNumFrameResources;
 	mCurrFrameResource = mFrameResources[mCurrFrameResourceIdx].get();
@@ -199,7 +199,7 @@ void PlayGroundApp::Draw(const GameTimer& gt)
 	//msaa
 	//mCommandList->ClearDepthStencilView(mMsaaDsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), (float*)&mMainPassCB.FogColor, 0, nullptr);
 	//mCommandList->ClearRenderTargetView(mMsaaRtvHeap->GetCPUDescriptorHandleForHeapStart(), Colors::LightSteelBlue, 0, nullptr);
 
 	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
@@ -338,10 +338,10 @@ void PlayGroundApp::OnKeyboardInput(const GameTimer& gt)
 	const float dt = gt.DeltaTime();
 
 	if (GetAsyncKeyState('W') & 0x8000)
-		mCamera.Walk(10.0f * dt);
+		mCamera.Walk(5.0f * dt);
 
 	if (GetAsyncKeyState('S') & 0x8000)
-		mCamera.Walk(-10.0f * dt);
+		mCamera.Walk(-5.0f * dt);
 
 	if (GetAsyncKeyState('A') & 0x8000)
 		mCamera.Strafe(-10.0f * dt);
@@ -408,6 +408,8 @@ void PlayGroundApp::UpdateMaterialBuffer(const GameTimer& gt)
 			XMStoreFloat4x4(&matData.MatTransform, XMMatrixTranspose(matTransform));
 			matData.DiffuseMapIndex = mat->DiffuseSrvHeapIndex;
 			matData.NormalMapIndex = mat->NormalSrvHeapIndex;
+			matData.MetallicMapIndex = mat->MetallicSrvHeapIndex;
+			matData.Smoothness = mat->Smoothness;
 
 			currMaterialBuffer->CopyData(mat->MatCBIndex, matData);
 
@@ -695,8 +697,8 @@ void PlayGroundApp::LoadTextures()
 		L"D:/c++/DXPlayGround/Textures/tile_nmap.dds",
 		L"D:/c++/DXPlayGround/Textures/white1x1.dds",
 		L"D:/c++/DXPlayGround/Textures/default_nmap.dds",
-		L"D:/c++/DXPlayGround/Textures/rustnormal.dds",
 		L"D:/c++/DXPlayGround/Textures/rustmetallic.dds",
+		L"D:/c++/DXPlayGround/Textures/rustnormal.dds",
 		L"D:/c++/DXPlayGround/Textures/rustbasecolor.dds",
 		L"D:/c++/DXPlayGround/Textures/snowcube1024.dds"
 	};
@@ -960,18 +962,20 @@ void PlayGroundApp::BuildShadersAndInputLayout()
 {
 	const D3D_SHADER_MACRO alphaTestDefines[] =
 	{
+		"FOG","1",
 		"ALPHA_TEST", "1",
 		NULL, NULL
 	};
 
 	const D3D_SHADER_MACRO defines[] =
 	{
+		"FOG","1",
 		"USE_NORMALMAP","1",
 		NULL,NULL,
 	};
 
 	mShaders["standardVS"] = d3dUtil::CompileShader(L"D:/c++/DXPlayGround/Shaders/Default.hlsl", nullptr, "VS", "vs_5_1");
-	mShaders["opaquePS"] = d3dUtil::CompileShader(L"D:/c++/DXPlayGround/Shaders/Default.hlsl", nullptr, "PS", "ps_5_1");
+	mShaders["opaquePS"] = d3dUtil::CompileShader(L"D:/c++/DXPlayGround/Shaders/Default.hlsl", defines, "PS", "ps_5_1");
 
 	mShaders["shadowVS"] = d3dUtil::CompileShader(L"D:/c++/DXPlayGround/Shaders/Shadows.hlsl", nullptr, "VS", "vs_5_1");
 	mShaders["shadowOpaquePS"] = d3dUtil::CompileShader(L"D:/c++/DXPlayGround/Shaders/Shadows.hlsl", nullptr, "PS", "ps_5_1");
@@ -1532,18 +1536,18 @@ void PlayGroundApp::BuildMaterials()
 	skullMat->NormalSrvHeapIndex = 5;
 	skullMat->DiffuseAlbedo = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	skullMat->FresnelR0 = XMFLOAT3(0.8f, 0.8f, 0.8f);
-	skullMat->Roughness = 0.01f;
+	skullMat->Roughness = 0.8f;
 
 	auto rusted = std::make_unique<Material>();
 	rusted->Name = "rusted";
 	rusted->MatCBIndex = 7;
 	rusted->DiffuseSrvHeapIndex = 8;
-	rusted->NormalSrvHeapIndex = 1;
-	//rusted->NormalSrvHeapIndex = 7;
+	//rusted->NormalSrvHeapIndex = 1;
+	rusted->NormalSrvHeapIndex = 7;
 	rusted->MetallicSrvHeapIndex = 6;
 	rusted->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	rusted->FresnelR0 = XMFLOAT3(0.98f, 0.97f, 0.95f);
-	rusted->Roughness = 0.1f;
+	rusted->FresnelR0 = XMFLOAT3(0.88f, 0.87f, 0.85f);
+	rusted->Roughness = 0.3f;
 
 	mMaterials["bricks0"] = std::move(bricks0);
 	mMaterials["tile0"] = std::move(tile0);

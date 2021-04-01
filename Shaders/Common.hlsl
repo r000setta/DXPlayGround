@@ -71,6 +71,11 @@ cbuffer cbPass : register(b1)
     float gTotalTime;
     float gDeltaTime;
     float4 gAmbientLight;
+    //FOG
+    float4 gFogColor;
+    float gFogStart;
+    float gFogRange;
+    float2 cbPerObjectPad2;
 
     Light gLights[MaxLights];
 };
@@ -130,6 +135,7 @@ float CalcShadowFactor(float4 shadowPosH)
             shadowPosH.xy + offsets[i], depth).r;
     }
     
-    return percentLit / 9.0f;
+    return percentLit / 2.0f;
+    //return percentLit / 9.0f;
 }
 

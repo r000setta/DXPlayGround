@@ -1,8 +1,3 @@
-//***************************************************************************************
-// Default.hlsl by Frank Luna (C) 2015 All Rights Reserved.
-//***************************************************************************************
-
-// Defaults for number of lights.
 #ifndef NUM_DIR_LIGHTS
     #define NUM_DIR_LIGHTS 3
 #endif
@@ -86,7 +81,7 @@ float4 PS(VertexOut pin) : SV_Target
     clip(diffuseAlbedo.a - 0.1f);
 #endif
 
-    float metallic = gTextureMaps[metallicMapIndex].Sample(gsamAnisotropicWrap,pin.TexC);
+    float metallic = gTextureMaps[metallicMapIndex].Sample(gsamAnisotropicWrap,pin.TexC).r;
 
     pin.NormalW = normalize(pin.NormalW);
 	
@@ -94,6 +89,8 @@ float4 PS(VertexOut pin) : SV_Target
 	float3 bumpedNormalW = NormalSampleToWorldSpace(normalMapSample.rgb, pin.NormalW, pin.TangentW);
     
     float3 toEyeW = normalize(gEyePosW - pin.PosW);
+
+    float distToEye = length(toEyeW);
 
     pin.SsaoPosH /= pin.SsaoPosH.w;
     float ambientAccess = gSsaoMap.Sample(gsamLinearClamp, pin.SsaoPosH.xy, 0.0f).r;
@@ -110,10 +107,16 @@ float4 PS(VertexOut pin) : SV_Target
 
     float4 litColor = ambient + directLight;
 
+
     float3 r = reflect(-toEyeW, bumpedNormalW);
     float4 reflectionColor = gCubeMap.Sample(gsamLinearWrap, r);
     float3 fresnelFactor = SchlickFresnel(fresnelR0, bumpedNormalW, r);
     litColor.rgb += shininess * fresnelFactor * reflectionColor.rgb;
+
+//#ifdef FOG
+//    float fogAmount = saturate((distToEye - gFogStart) / gFogRange);
+//    litColor = lerp(litColor, gFogColor, fogAmount);
+//#endif
 	
     litColor.a = diffuseAlbedo.a;
 

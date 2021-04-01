@@ -28,6 +28,7 @@
 #include <cassert>
 #include "d3dx12.h"
 #include "DDSTextureLoader.h"
+#include "WICTextureLoader12.h"
 #include "MathHelper.h"
 
 using Microsoft::WRL::ComPtr;
